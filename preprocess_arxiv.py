@@ -9,7 +9,7 @@ class ArxivDatasetPreprocesser:
     def __init__(self):
         # TODO replace read on local machine to cloud storage
         # self.raw_data_path = 'input/arxiv-metadata-oai-snapshot.json'
-        self.raw_data_path = 'input/example.json'
+        self.raw_data_path = 'input/example.json'  # for testing
         self.ids = []
         self.category_codes = []
         self.categories = []
@@ -18,11 +18,14 @@ class ArxivDatasetPreprocesser:
         self.update_dates = []
 
     def supply_line(self):
+        '''
+        Generator for JSON objects, which represent individual papers.
+        '''
         with open(self.raw_data_path, 'r') as fh:
             for line in fh:
                 yield json.loads(line)
 
-    def load_data(self):
+    def extract_data(self):
         for line in self.supply_line():
             self.ids.append(line['id'])
 
@@ -34,7 +37,7 @@ class ArxivDatasetPreprocesser:
             self.abstracts.append(line['abstract'])
             self.update_dates.append(line['update_date'])
 
-    def print_load_results(self):
+    def print_extract_step_results(self):
         print('Number of ids parsed: {}'.format(len(self.ids)))
         print('Number of category_codes parsed: {}'.format(len(self.category_codes)))  # noqa: E501
         print('Number of categories parsed: {}'.format(len(self.categories)))
@@ -53,12 +56,32 @@ class ArxivDatasetPreprocesser:
     def lookup_category_for_code(self, category_code):
         return category_map[category_code]
 
+    def remove_stop_words(self):
+        # apply to titles and abstracts
+        return
+
+    def tokenize(self):
+        return
+
+    def stem(self):
+        return
+
+    def remove_numbers(self):
+        return
+
+    def remove_punctuation(self):
+        return
+
 
 def main():
+    # extract
     preprocessor = ArxivDatasetPreprocesser()
-    preprocessor.load_data()
-    preprocessor.lookup_category_for_codes()
-    preprocessor.print_load_results()
+    preprocessor.extract_data()
+    preprocessor.print_extract_step_results()
+
+    # transform
+
+    # load
 
 
 if __name__:
