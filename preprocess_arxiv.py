@@ -2,7 +2,7 @@
 # https://www.kaggle.com/Cornell-University/arxiv
 import json
 from input.category_map import category_map
-import nltk
+import spacy
 
 
 class ArxivDatasetPreprocesser:
@@ -14,8 +14,11 @@ class ArxivDatasetPreprocesser:
         self.category_codes = []
         self.categories = []
         self.titles = []
+        self.cleaned_titles = []
         self.abstracts = []
+        self.cleaned_abstracts = []
         self.update_dates = []
+        self.sp = spacy.load('en_core_web_sm')
 
     def supply_line(self):
         '''
@@ -31,19 +34,23 @@ class ArxivDatasetPreprocesser:
 
             category_code = self.preprocess_category_codes(line['categories'])
             self.category_codes.append(category_code)
-            self.categories.append(self.lookup_category_for_code(category_code))  # noqa: E501
+
+            if category_code[0] is None:
+                self.categories.append(category_code[1])
+            else:
+                self.categories.append(self.lookup_category_for_code(category_code))
 
             self.titles.append(line['title'])
             self.abstracts.append(line['abstract'])
             self.update_dates.append(line['update_date'])
 
     def print_extract_step_results(self):
-        print('Number of ids parsed: {}'.format(len(self.ids)))
-        print('Number of category_codes parsed: {}'.format(len(self.category_codes)))  # noqa: E501
-        print('Number of categories parsed: {}'.format(len(self.categories)))
-        print('Number of titles parsed: {}'.format(len(self.titles)))
-        print('Number of abstracts parsed: {}'.format(len(self.abstracts)))
-        print('Number of update_dates parsed: {}'.format(len(self.update_dates)))  # noqa: E501
+        print('Number of ids extracted: {}'.format(len(self.ids)))
+        print('Number of category_codes extracted: {}'.format(len(self.category_codes)))
+        print('Number of categories extracted: {}'.format(len(self.categories)))
+        print('Number of titles extracted: {}'.format(len(self.titles)))
+        print('Number of abstracts extracted: {}'.format(len(self.abstracts)))
+        print('Number of update_dates extracted: {}'.format(len(self.update_dates)))
 
     def preprocess_category_codes(self, category_code):
         '''
@@ -51,26 +58,48 @@ class ArxivDatasetPreprocesser:
         TODO revisit this
         '''
         categories = str.split(' ')
-        return categories[0]
+        if categories:
+            return categories[0]
+        else:
+            return (None, "No category provided")
 
     def lookup_category_for_code(self, category_code):
         return category_map[category_code]
 
-    def remove_stop_words(self):
-        # apply to titles and abstracts
-        return
+    def clean_doc(self, doc):
+        '''
+        1. lowercase
+        2. tokenize
+        3. lemmaize
+        4. remove stop words
+        5. limit to words consisting of alphabetic chars
+        '''
+        cleaned_doc = []
 
-    def tokenize(self):
-        return
+        sp_doc = self.sp(doc)  # tokenize
+        for token in sp_doc:
+            if not token.is_stop:  # remove stop words
+                if token.is_alpha:  # remove numbers etc.
+                    token.lemma_ = token.lemma_.lower()  # lemmaize and force lowercase
+                    cleaned_doc.append(token.lemma_)
 
-    def stem(self):
-        return
+        return cleaned_doc
 
-    def remove_numbers(self):
-        return
+    def transform_titles(self):
+        for title in self.titles:
+            cleaned_title = self.clean_doc(title)
+            self.cleaned_titles.append(cleaned_title)
 
-    def remove_punctuation(self):
-        return
+    def transform_abstracts(self):
+        for abstract in self.abstracts:
+            cleaned_abstract = self.clean_doc(abstract)
+            self.cleaned_abstracts.append(cleaned_abstract)
+
+    def print_transform_step_results(self):
+        # TODO if not match, raise err
+        print('Number of ids extracted: {}'.format(len(self.ids)))
+        print('Number of cleaned titles: {}'.format(len(self.cleaned_titles)))
+        print('Number of cleaned abstracts: {}'.format(len(self.cleaned_abstracts)))
 
 
 def main():
@@ -80,6 +109,9 @@ def main():
     preprocessor.print_extract_step_results()
 
     # transform
+    preprocessor.transform_titles()
+    preprocessor.transform_abstracts()
+    preprocessor.print_transform_step_results()
 
     # load
 
