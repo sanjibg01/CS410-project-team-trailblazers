@@ -1,8 +1,10 @@
 # https://medium.com/@datamonsters/text-preprocessing-in-python-steps-tools-and-examples-bf025f872908
 # https://www.kaggle.com/Cornell-University/arxiv
 import json
-from input.category_map import category_map
 import spacy
+import os
+
+from input.category_map import category_map
 
 
 class ArxivDatasetPreprocesser:
@@ -14,8 +16,10 @@ class ArxivDatasetPreprocesser:
         self.category_codes = []
         self.categories = []
         self.titles = []
+        self.tokenized_titles = []
         self.cleaned_titles = []
         self.abstracts = []
+        self.tokenized_abstracts = []
         self.cleaned_abstracts = []
         self.update_dates = []
         self.sp = spacy.load('en_core_web_sm')
@@ -51,6 +55,7 @@ class ArxivDatasetPreprocesser:
         print('Number of titles extracted: {}'.format(len(self.titles)))
         print('Number of abstracts extracted: {}'.format(len(self.abstracts)))
         print('Number of update_dates extracted: {}'.format(len(self.update_dates)))
+        print('\n')
 
     def preprocess_category_codes(self, category_code):
         '''
@@ -67,39 +72,46 @@ class ArxivDatasetPreprocesser:
         return category_map[category_code]
 
     def clean_doc(self, doc):
-        '''
-        1. lowercase
-        2. tokenize
-        3. lemmaize
-        4. remove stop words
-        5. limit to words consisting of alphabetic chars
-        '''
         cleaned_doc = []
 
         sp_doc = self.sp(doc)  # tokenize
         for token in sp_doc:
             if not token.is_stop:  # remove stop words
                 if token.is_alpha:  # remove numbers etc.
-                    token.lemma_ = token.lemma_.lower()  # lemmaize and force lowercase
-                    cleaned_doc.append(token.lemma_)
+                    if token.pos_ == 'NOUN':
+                        token.lemma_ = token.lemma_.lower()  # lemmaize and force lowercase
+                        cleaned_doc.append(token.lemma_)
 
         return cleaned_doc
 
     def transform_titles(self):
         for title in self.titles:
             cleaned_title = self.clean_doc(title)
-            self.cleaned_titles.append(cleaned_title)
+            self.tokenized_titles.append(cleaned_title)
 
     def transform_abstracts(self):
         for abstract in self.abstracts:
             cleaned_abstract = self.clean_doc(abstract)
-            self.cleaned_abstracts.append(cleaned_abstract)
+            self.tokenized_abstracts.append(cleaned_abstract)
 
     def print_transform_step_results(self):
         # TODO if not match, raise err
         print('Number of ids extracted: {}'.format(len(self.ids)))
         print('Number of cleaned titles: {}'.format(len(self.cleaned_titles)))
         print('Number of cleaned abstracts: {}'.format(len(self.cleaned_abstracts)))
+        print('\n')
+
+    def reassemble_corpus(self, tokenized_corpus, cleaned_corpus):
+        '''
+        Using the preprocessed tokens, reassemble the original
+        corpus.
+        '''
+        for doc in tokenized_corpus:
+            cleaned_corpus.append(' '.join(doc))
+
+    def write_output(self, filename, obj_to_write):
+        with open(filename + '.json', 'w') as f:
+            json.dump(obj_to_write, f, indent=2)
 
 
 def main():
@@ -111,9 +123,15 @@ def main():
     # transform
     preprocessor.transform_titles()
     preprocessor.transform_abstracts()
+
+    preprocessor.reassemble_corpus(preprocessor.tokenized_titles, preprocessor.cleaned_titles)
+    preprocessor.reassemble_corpus(preprocessor.tokenized_abstracts, preprocessor.cleaned_abstracts)
+
     preprocessor.print_transform_step_results()
 
     # load
+    preprocessor.write_output('preprocessed_abstracts', preprocessor.cleaned_abstracts)
+
 
 
 if __name__:
