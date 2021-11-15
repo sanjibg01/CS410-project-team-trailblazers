@@ -2,6 +2,8 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import pyLDAvis
+import pyLDAvis.sklearn
 
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
@@ -97,7 +99,9 @@ def grid_search_results_simple(doc_term_matrix):
 
     return(best_lda_model)
 
+
 n_topics = [10, 15, 20, 25, 30]
+
 
 def grid_search_results_detail(model, n_topics):
     # Get Log Likelyhoods from Grid Search Output
@@ -121,47 +125,70 @@ def grid_search_results_detail(model, n_topics):
 
 best_lda_model = grid_search_results_simple(doc_term_matrix)
 
-# Create Document - Topic Matrix
-lda_output = best_lda_model.transform(doc_term_matrix)
 
-# column names
-topicnames = ["Topic" + str(i) for i in range(10)]  # n_topics in best model
+def generate_result_details(best_lda_model, doc_term_matrix):
+    # Create Document - Topic Matrix
+    lda_output = best_lda_model.transform(doc_term_matrix)
 
-# index names
-docnames = ["Doc" + str(i) for i in range(len(corpus))]
+    # column names
+    topicnames = ["Topic" + str(i) for i in range(10)]  # n_topics in best model
 
-print(lda_output)
-print(len(topicnames))
-print(len(docnames))
+    # index names
+    docnames = ["Doc" + str(i) for i in range(len(corpus))]
 
-# Make the pandas dataframe
-df_document_topic = pd.DataFrame(np.round(lda_output, 2), columns=topicnames, index=docnames)
+    print(lda_output)
+    print(len(topicnames))
+    print(len(docnames))
 
-# Get dominant topic for each document
-dominant_topic = np.argmax(df_document_topic.values, axis=1)
-df_document_topic['dominant_topic'] = dominant_topic
+    # Make the pandas dataframe
+    df_document_topic = pd.DataFrame(np.round(lda_output, 2), columns=topicnames, index=docnames)
 
+    # Get dominant topic for each document
+    dominant_topic = np.argmax(df_document_topic.values, axis=1)
+    df_document_topic['dominant_topic'] = dominant_topic
 
-# Styling
-def color_green(val):
-    color = 'green' if val > .1 else 'black'
-    return 'color: {col}'.format(col=color)
+    # Styling
+    def color_green(val):
+        color = 'green' if val > .1 else 'black'
+        return 'color: {col}'.format(col=color)
 
+    def make_bold(val):
+        weight = 700 if val > .1 else 400
+        return 'font-weight: {weight}'.format(weight=weight)
 
-def make_bold(val):
-    weight = 700 if val > .1 else 400
-    return 'font-weight: {weight}'.format(weight=weight)
+    # Apply Style
+    # df_document_topics = df_document_topic.head(15).style.applymap(color_green).applymap(make_bold)
+    print(df_document_topic.head())
 
-
-# Apply Style
-# df_document_topics = df_document_topic.head(15).style.applymap(color_green).applymap(make_bold)
-print(df_document_topic.head())
-
-# Review topics distribution across documents
-df_topic_distribution = df_document_topic['dominant_topic'].value_counts().reset_index(name="Num Documents")
-df_topic_distribution.columns = ['Topic Num', 'Num Documents']
-print(df_topic_distribution)
-
+    # Review topics distribution across documents
+    df_topic_distribution = df_document_topic['dominant_topic'].value_counts().reset_index(name="Num Documents")
+    df_topic_distribution.columns = ['Topic Num', 'Num Documents']
+    print(df_topic_distribution)
 
 
+def lda_plot(best_lda_model, doc_term_matrix):
+    # run in notebook
+    panel = pyLDAvis.sklearn.prepare(best_lda_model, np.matrix(doc_term_matrix), vectorizer, mds='tsne')
+    panel
 
+
+def top_keywords_in_topic(lda_model, vectorizer):
+
+    def show_topics(vectorizer=vectorizer, lda_model=lda_model, n_words=20):
+        keywords = np.array(vectorizer.get_feature_names())
+        topic_keywords = []
+        for topic_weights in lda_model.components_:
+            top_keyword_locs = (-topic_weights).argsort()[:n_words]
+            topic_keywords.append(keywords.take(top_keyword_locs))
+        return topic_keywords
+
+    topic_keywords = show_topics(vectorizer=vectorizer, lda_model=best_lda_model, n_words=15)
+
+    # Topic - Keywords Dataframe
+    df_topic_keywords = pd.DataFrame(topic_keywords)
+    df_topic_keywords.columns = ['Word '+str(i) for i in range(df_topic_keywords.shape[1])]
+    df_topic_keywords.index = ['Topic '+str(i) for i in range(df_topic_keywords.shape[0])]
+    print(df_topic_keywords.head())
+
+
+# top_keywords_in_topic(best_lda_model, vectorizer)
