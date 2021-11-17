@@ -4,191 +4,194 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pyLDAvis
 import pyLDAvis.sklearn
+import gensim
+import gensim.corpora as corpora
+
+from gensim.utils import simple_preprocess
+from gensim.models import CoherenceModel
 
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.model_selection import GridSearchCV
 
 
-with open('preprocessed_abstracts.json', 'r') as f:
-    corpus = json.load(f)
+class TopicModeler:
+    def __init__(self, file):
+        self.corpus = self.get_corpus(file)
+        self.vectorizer = None
+        self.matrix = None
+        self.grid_search_results = None
+        self.model = None
+        self.X = None
 
-vectorizer = CountVectorizer()
+    def get_corpus(self, file):
+        with open(file, 'r') as f:
+            corpus = json.load(f)
+        return corpus
 
-# if wanting to use n-grams:
-# vectorizer2 = CountVectorizer(analyzer='word', ngram_range=(2, 2))
-X = vectorizer.fit_transform(corpus)
-vocab = vectorizer.get_feature_names_out()  # list of distinct tokens
-doc_term_matrix = X.toarray()
+    def build_doc_term_matrix(self):
+        self.vectorizer = CountVectorizer()
 
-# tf-idf
-tfidf_vectorizer = TfidfVectorizer(use_idf=True)
-tfidf = tfidf_vectorizer.fit_transform(corpus)
+        # if wanting to use n-grams:
+        # vectorizer2 = CountVectorizer(analyzer='word', ngram_range=(2, 2))
 
+        self.X = self.vectorizer.fit_transform(self.corpus)
+        # vocab = vectorizer.get_feature_names_out()  # list of distinct tokens
+        doc_term_matrix = self.X.toarray()
 
-def examine_tfidf_matrix(tfidf, tfidf_vectorizer):
-    # place tf-idf values in a pandas data frame
+        self.matrix = doc_term_matrix
 
-    df = pd.DataFrame(
-        tfidf[0].T.todense(),
-        index=tfidf_vectorizer.get_feature_names_out(),
-        columns=["tfidf"])
+    def build_tfidf_matrix(self):
+        '''
+        Out: tfidf_matrix in numpy sparse row format
+        '''
+        self.vectorizer = TfidfVectorizer(use_idf=True)
+        self.matrix = self.vectorizer.fit_transform(self.corpus)
 
-    print(df.sort_values(by=["tfidf"], ascending=False))
+    def matrix_to_df(self):
+        # Place tf-idf values in a pandas data frame
+        df = pd.DataFrame(
+            self.matrix[0].T.todense(),
+            index=self.vectorizer.get_feature_names_out(),
+            columns=["tfidf"])
 
+        df = df.sort_values(by=["tfidf"], ascending=False)
 
-def lda_example_simple(doc_term_matrix):
-    # Example of fitting LDA
-    lda = LatentDirichletAllocation(
-        n_components=4,
-        random_state=42)
-    lda.fit(doc_term_matrix)
-    topic_results = lda.transform(doc_term_matrix)
-    print(topic_results)
+        return df
 
+    def get_matrix_shape(self):
+        print(self.matrix.shape)
 
-def lda_example_full(doc_term_matrix):
-    # Example of fitting LDA
-    lda_model = LatentDirichletAllocation(n_components=20,               # Number of topics
-                                          max_iter=10,               # Max learning iterations
-                                          learning_method='online',
-                                          random_state=100,          # Random state
-                                          batch_size=128,            # n docs in each learning iter
-                                          evaluate_every=-1,         # compute perplexity every n iters, default: Don't
-                                          n_jobs=-1,                 # Use all available CPUs
-                                          )
+    def fit_lda(self):
+        # Example of fitting LDA
+        self.model = LatentDirichletAllocation(n_components=20,           # Number of topics
+                                               max_iter=10,               # Max learning iterations
+                                               learning_method='online',
+                                               random_state=100,          # Random state
+                                               batch_size=128,            # n docs in each learning iter
+                                               evaluate_every=-1,         # compute perplexity every n iters, default: Don't
+                                               n_jobs=-1,                 # Use all available CPUs
+                                               )
 
-    lda_output = lda_model.fit_transform(doc_term_matrix)
-    return lda_model, lda_output
+        # lda_output = self.model.fit_transform(self.matrix)
 
+    def print_lda_results(self):
+        # Log Likelyhood: Higher the better
+        print("Log Likelihood: ", self.model.score(self.matrix))
 
-def lda_score(lda_model, doc_term_matrix):
-    # Log Likelyhood: Higher the better
-    print("Log Likelihood: ", lda_model.score(doc_term_matrix))
+        # Perplexity: Lower the better. Perplexity = exp(-1. * log-likelihood per word)
+        print("Perplexity: ", self.model.perplexity(self.matrix))
 
-    # Perplexity: Lower the better. Perplexity = exp(-1. * log-likelihood per word)
-    print("Perplexity: ", lda_model.perplexity(doc_term_matrix))
+        # See model parameters
+        print(self.model.get_params())
 
-    # See model parameters
-    print(lda_model.get_params())
+    def perform_grid_search(self, n_topics=[10, 15, 20, 25, 30], learning_decay=[.5, .7, .9]):
+        search_params = {'n_components': n_topics, 'learning_decay': learning_decay}
 
+        # Init the Model
+        lda = LatentDirichletAllocation()
 
-def grid_search_results_simple(doc_term_matrix):
-    search_params = {'n_components': [10, 15, 20, 25, 30], 'learning_decay': [.5, .7, .9]}
+        # Init Grid Search Class
+        grid_search_model_obj = GridSearchCV(lda, param_grid=search_params)
 
-    # Init the Model
-    lda = LatentDirichletAllocation()
+        # Do the Grid Search
+        grid_search_model_obj.fit(self.matrix)
 
-    # Init Grid Search Class
-    model = GridSearchCV(lda, param_grid=search_params)
+        self.grid_search_results = grid_search_model_obj
 
-    # Do the Grid Search
-    model.fit(doc_term_matrix)
+    def set_model_to_optimum(self):
+        self.model = self.grid_search_results.best_estimator_
 
-    # Best Model
-    best_lda_model = model.best_estimator_
+    def print_grid_search_results(self):
+        # Model Parameters
+        print('\n')
+        print('Printing grid search results...')
+        print("Best Model's Params: ", self.grid_search_results.best_params_)
 
-    # Model Parameters
-    print("Best Model's Params: ", model.best_params_)
+        # Log Likelihood Score
+        print("Best Log Likelihood Score: ", self.grid_search_results.best_score_)
 
-    # Log Likelihood Score
-    print("Best Log Likelihood Score: ", model.best_score_)
+        # Perplexity
+        print("Model Perplexity: ", self.model.perplexity(self.matrix))
 
-    # Perplexity
-    print("Model Perplexity: ", best_lda_model.perplexity(doc_term_matrix))
+    def plot_grid_search_results(self, n_topics=[10, 15, 20, 25, 30]):
+        # Get Log Likelyhoods from Grid Search Output
+        log_likelyhoods_5 = [round(self.grid_search_results.cv_results_['mean_test_score'][index])
+            for index, gscore in enumerate(self.grid_search_results.cv_results_['params']) if gscore['learning_decay'] == 0.5]
 
-    return(best_lda_model)
+        log_likelyhoods_7 = [round(self.grid_search_results.cv_results_['mean_test_score'][index])
+             for index, gscore in enumerate(self.grid_search_results.cv_results_['params']) if gscore['learning_decay'] == 0.7]
 
+        log_likelyhoods_9 = [round(self.grid_search_results.cv_results_['mean_test_score'][index])\
+            for index, gscore in enumerate(self.grid_search_results.cv_results_['params']) if gscore['learning_decay'] == 0.9]
 
-n_topics = [10, 15, 20, 25, 30]
+        # Show graph
+        plt.figure(figsize=(12, 8))
+        plt.plot(n_topics, log_likelyhoods_5, label='0.5')
+        plt.plot(n_topics, log_likelyhoods_7, label='0.7')
+        plt.plot(n_topics, log_likelyhoods_9, label='0.9')
+        plt.title("Choosing Optimal LDA Model")
+        plt.xlabel("Num Topics")
+        plt.ylabel("Log Likelyhood Scores")
+        plt.legend(title='Learning decay', loc='best')
+        plt.show()
 
+    def print_selected_model_details(self):
+        print('\n')
+        print('Printing detailed grid search results...')
 
-def grid_search_results_detail(model, n_topics):
-    # Get Log Likelyhoods from Grid Search Output
-    n_topics = [10, 15, 20, 25, 30]
+        # Create Document - Topic Matrix
+        doc_topic_matrix = self.model.transform(self.matrix)
 
-    log_likelyhoods_5 = [round(model.cv_results_['mean_test_score'][index]) for index, gscore in enumerate(model.cv_results_['params']) if gscore['learning_decay']==0.5]
-    log_likelyhoods_7 = [round(model.cv_results_['mean_test_score'][index]) for index, gscore in enumerate(model.cv_results_['params']) if gscore['learning_decay']==0.7]
-    log_likelyhoods_9 = [round(model.cv_results_['mean_test_score'][index]) for index, gscore in enumerate(model.cv_results_['params']) if gscore['learning_decay']==0.9]
+        # column names
+        num_topics_in_best_model = self.grid_search_results.best_params_['n_components']
+        topicnames = ["Topic" + str(i) for i in range(num_topics_in_best_model)]
 
-    # Show graph
-    plt.figure(figsize=(12, 8))
-    plt.plot(n_topics, log_likelyhoods_5, label='0.5')
-    plt.plot(n_topics, log_likelyhoods_7, label='0.7')
-    plt.plot(n_topics, log_likelyhoods_9, label='0.9')
-    plt.title("Choosing Optimal LDA Model")
-    plt.xlabel("Num Topics")
-    plt.ylabel("Log Likelyhood Scores")
-    plt.legend(title='Learning decay', loc='best')
-    plt.show()
+        # index names
+        docnames = ["Doc" + str(i) for i in range(len(self.corpus))]
 
+        print(doc_topic_matrix)
+        print(len(topicnames))
+        print(len(docnames))
 
-best_lda_model = grid_search_results_simple(doc_term_matrix)
+        # Make the pandas dataframe
+        df_document_topic = pd.DataFrame(
+            np.round(doc_topic_matrix, 2),
+            columns=topicnames,
+            index=docnames)
 
+        # Get dominant topic for each document
+        dominant_topic = np.argmax(df_document_topic.values, axis=1)
+        df_document_topic['dominant_topic'] = dominant_topic
 
-def generate_result_details(best_lda_model, doc_term_matrix):
-    # Create Document - Topic Matrix
-    lda_output = best_lda_model.transform(doc_term_matrix)
+        # Apply Style
+        print(df_document_topic.head())
 
-    # column names
-    topicnames = ["Topic" + str(i) for i in range(10)]  # n_topics in best model
+        # Review topics distribution across documents
+        df_topic_distribution = df_document_topic['dominant_topic'].value_counts().reset_index(name="Num Documents")
+        df_topic_distribution.columns = ['Topic Num', 'Num Documents']
+        print(df_topic_distribution)
 
-    # index names
-    docnames = ["Doc" + str(i) for i in range(len(corpus))]
+    def print_top_keywords_in_topic(self):
 
-    print(lda_output)
-    print(len(topicnames))
-    print(len(docnames))
+        def show_topics_helper(n_words=20):
+            keywords = np.array(self.vectorizer.get_feature_names_out())
+            topic_keywords = []
+            for topic_weights in self.model.components_:
+                top_keyword_locs = (-topic_weights).argsort()[:n_words]
+                topic_keywords.append(keywords.take(top_keyword_locs))
+            return topic_keywords
 
-    # Make the pandas dataframe
-    df_document_topic = pd.DataFrame(np.round(lda_output, 2), columns=topicnames, index=docnames)
+        topic_keywords = show_topics_helper(n_words=15)
 
-    # Get dominant topic for each document
-    dominant_topic = np.argmax(df_document_topic.values, axis=1)
-    df_document_topic['dominant_topic'] = dominant_topic
-
-    # Styling
-    def color_green(val):
-        color = 'green' if val > .1 else 'black'
-        return 'color: {col}'.format(col=color)
-
-    def make_bold(val):
-        weight = 700 if val > .1 else 400
-        return 'font-weight: {weight}'.format(weight=weight)
-
-    # Apply Style
-    # df_document_topics = df_document_topic.head(15).style.applymap(color_green).applymap(make_bold)
-    print(df_document_topic.head())
-
-    # Review topics distribution across documents
-    df_topic_distribution = df_document_topic['dominant_topic'].value_counts().reset_index(name="Num Documents")
-    df_topic_distribution.columns = ['Topic Num', 'Num Documents']
-    print(df_topic_distribution)
-
-
-def lda_plot(best_lda_model, doc_term_matrix):
-    # run in notebook
-    panel = pyLDAvis.sklearn.prepare(best_lda_model, np.matrix(doc_term_matrix), vectorizer, mds='tsne')
-    panel
-
-
-def top_keywords_in_topic(lda_model, vectorizer):
-
-    def show_topics(vectorizer=vectorizer, lda_model=lda_model, n_words=20):
-        keywords = np.array(vectorizer.get_feature_names())
-        topic_keywords = []
-        for topic_weights in lda_model.components_:
-            top_keyword_locs = (-topic_weights).argsort()[:n_words]
-            topic_keywords.append(keywords.take(top_keyword_locs))
-        return topic_keywords
-
-    topic_keywords = show_topics(vectorizer=vectorizer, lda_model=best_lda_model, n_words=15)
-
-    # Topic - Keywords Dataframe
-    df_topic_keywords = pd.DataFrame(topic_keywords)
-    df_topic_keywords.columns = ['Word '+str(i) for i in range(df_topic_keywords.shape[1])]
-    df_topic_keywords.index = ['Topic '+str(i) for i in range(df_topic_keywords.shape[0])]
-    print(df_topic_keywords.head())
+        # Topic - Keywords Dataframe
+        df_topic_keywords = pd.DataFrame(topic_keywords)
+        df_topic_keywords.columns = ['Word '+str(i) for i in range(df_topic_keywords.shape[1])]
+        df_topic_keywords.index = ['Topic '+str(i) for i in range(df_topic_keywords.shape[0])]
+        print(df_topic_keywords)
 
 
-# top_keywords_in_topic(best_lda_model, vectorizer)
+# def lda_plot(vectorizer, best_lda_model, doc_term_matrix):
+#     # run in notebook
+#     panel = pyLDAvis.sklearn.prepare(best_lda_model, np.matrix(doc_term_matrix), vectorizer, mds='tsne')
+#     panel

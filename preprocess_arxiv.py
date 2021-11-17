@@ -1,20 +1,19 @@
-# https://medium.com/@datamonsters/text-preprocessing-in-python-steps-tools-and-examples-bf025f872908
-# https://www.kaggle.com/Cornell-University/arxiv
 import json
 import spacy
-import os
+import time
 
 from input.category_map import category_map
 
 
 class ArxivDatasetPreprocesser:
     def __init__(self):
-        # TODO replace read on local machine to cloud storage
         # self.raw_data_path = 'input/arxiv-metadata-oai-snapshot.json'
-        self.raw_data_path = 'input/example.json'  # for testing
+        self.raw_data_path = 'input/example2.json'  # for testing
         self.ids = []
         self.category_codes = []
         self.categories = []
+        self.tokenized_categories = []
+        self.cleaned_categories = []
         self.titles = []
         self.tokenized_titles = []
         self.cleaned_titles = []
@@ -35,6 +34,9 @@ class ArxivDatasetPreprocesser:
     def extract_data(self):
         for line in self.supply_line():
             self.ids.append(line['id'])
+
+            if 'cs' not in line['categories']:
+                continue
 
             category_code = self.preprocess_category_codes(line['categories'])
             self.category_codes.append(category_code)
@@ -62,24 +64,28 @@ class ArxivDatasetPreprocesser:
         There may be >1 category code. For now, take the first.
         TODO revisit this
         '''
-        categories = str.split(' ')
+        categories = category_code.split(' ')
         if categories:
             return categories[0]
         else:
             return (None, "No category provided")
 
     def lookup_category_for_code(self, category_code):
-        return category_map[category_code]
+        if category_code in category_map:
+            return category_map[category_code]
 
-    def clean_doc(self, doc):
+    def clean_doc(self, doc, keep_only_nouns=True):
         cleaned_doc = []
 
-        sp_doc = self.sp(doc)  # tokenize
+        sp_doc = self.sp(doc, disable=["parser", "ner"])  # tokenize
         for token in sp_doc:
             if not token.is_stop:  # remove stop words
                 if token.is_alpha:  # remove numbers etc.
-                    if token.pos_ == 'NOUN':
-                        token.lemma_ = token.lemma_.lower()  # lemmaize and force lowercase
+                    token.lemma_ = token.lemma_.lower()  # lemmaize and force lowercase
+                    if keep_only_nouns:
+                        if token.pos_ == 'NOUN':
+                            cleaned_doc.append(token.lemma_)
+                    else:
                         cleaned_doc.append(token.lemma_)
 
         return cleaned_doc
@@ -90,9 +96,17 @@ class ArxivDatasetPreprocesser:
             self.tokenized_titles.append(cleaned_title)
 
     def transform_abstracts(self):
+        # start = time.time()
         for abstract in self.abstracts:
             cleaned_abstract = self.clean_doc(abstract)
             self.tokenized_abstracts.append(cleaned_abstract)
+            # end = time.time()
+            # print(end - start)
+
+    def transform_categories(self):
+        for category in self.categories:
+            tokenized_category = self.clean_doc(category, keep_only_nouns=False)
+            self.tokenized_categories.append(tokenized_category)
 
     def print_transform_step_results(self):
         # TODO if not match, raise err
@@ -109,6 +123,26 @@ class ArxivDatasetPreprocesser:
         for doc in tokenized_corpus:
             cleaned_corpus.append(' '.join(doc))
 
+    def combine_output(self):
+        output = []
+
+        for abstract, title, category in zip(self.cleaned_abstracts, self.cleaned_titles, self.cleaned_categories):
+            # start = time.time()
+            combined_result_string = ''
+            combined_result_string = combined_result_string + abstract
+
+            if title != '':
+                combined_result_string = combined_result_string + ' ' + title
+
+            if category != 'no category provided':
+                combined_result_string = combined_result_string + ' ' + category
+
+            output.append(combined_result_string)
+            # end = time.time()
+            # print(end - start)
+
+        return output
+
     def write_output(self, filename, obj_to_write):
         with open(filename + '.json', 'w') as f:
             json.dump(obj_to_write, f, indent=2)
@@ -122,16 +156,24 @@ def main():
 
     # transform
     preprocessor.transform_titles()
+    print('Completed cleaning titles')
     preprocessor.transform_abstracts()
+    print('Completed cleaning abstracts')
+    preprocessor.transform_categories()
+    print('Completed cleaning categories')
 
     preprocessor.reassemble_corpus(preprocessor.tokenized_titles, preprocessor.cleaned_titles)
+    print('Completed reassembling titles')
     preprocessor.reassemble_corpus(preprocessor.tokenized_abstracts, preprocessor.cleaned_abstracts)
+    print('Completed reassembling abstracts')
+    preprocessor.reassemble_corpus(preprocessor.tokenized_categories, preprocessor.cleaned_categories)
+    print('Completed reassembling categories')
 
     preprocessor.print_transform_step_results()
+    output = preprocessor.combine_output()
 
     # load
-    preprocessor.write_output('preprocessed_abstracts', preprocessor.cleaned_abstracts)
-
+    preprocessor.write_output('output', output)
 
 
 if __name__:
