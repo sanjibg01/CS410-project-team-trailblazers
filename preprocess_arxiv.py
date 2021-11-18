@@ -111,8 +111,8 @@ class ArxivDatasetPreprocesser:
     def print_transform_step_results(self):
         # TODO if not match, raise err
         print('Number of ids extracted: {}'.format(len(self.ids)))
-        print('Number of cleaned titles: {}'.format(len(self.cleaned_titles)))
-        print('Number of cleaned abstracts: {}'.format(len(self.cleaned_abstracts)))
+        print('Number of cleaned titles: {}'.format(len(self.tokenized_titles)))
+        print('Number of cleaned abstracts: {}'.format(len(self.tokenized_abstracts)))
         print('\n')
 
     def reassemble_corpus(self, tokenized_corpus, cleaned_corpus):
@@ -126,18 +126,18 @@ class ArxivDatasetPreprocesser:
     def combine_output(self):
         output = []
 
-        for abstract, title, category in zip(self.cleaned_abstracts, self.cleaned_titles, self.cleaned_categories):
+        for abstract, title, category in zip(self.tokenized_abstracts, self.tokenized_titles, self.tokenized_categories):
             # start = time.time()
-            combined_result_string = ''
-            combined_result_string = combined_result_string + abstract
+            doc = []
+            doc.extend(abstract)
 
             if title != '':
-                combined_result_string = combined_result_string + ' ' + title
+                doc.extend(title)
 
             if category != 'no category provided':
-                combined_result_string = combined_result_string + ' ' + category
+                doc.extend(category)
 
-            output.append(combined_result_string)
+            output.append(doc)
             # end = time.time()
             # print(end - start)
 
@@ -162,12 +162,12 @@ def main():
     preprocessor.transform_categories()
     print('Completed cleaning categories')
 
-    preprocessor.reassemble_corpus(preprocessor.tokenized_titles, preprocessor.cleaned_titles)
-    print('Completed reassembling titles')
-    preprocessor.reassemble_corpus(preprocessor.tokenized_abstracts, preprocessor.cleaned_abstracts)
-    print('Completed reassembling abstracts')
-    preprocessor.reassemble_corpus(preprocessor.tokenized_categories, preprocessor.cleaned_categories)
-    print('Completed reassembling categories')
+    # preprocessor.reassemble_corpus(preprocessor.tokenized_titles, preprocessor.cleaned_titles)
+    # print('Completed reassembling titles')
+    # preprocessor.reassemble_corpus(preprocessor.tokenized_abstracts, preprocessor.cleaned_abstracts)
+    # print('Completed reassembling abstracts')
+    # preprocessor.reassemble_corpus(preprocessor.tokenized_categories, preprocessor.cleaned_categories)
+    # print('Completed reassembling categories')
 
     preprocessor.print_transform_step_results()
     output = preprocessor.combine_output()
