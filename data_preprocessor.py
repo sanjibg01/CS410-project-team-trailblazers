@@ -5,7 +5,7 @@ import time
 from input.category_map import category_map
 
 
-class ArxivDatasetPreprocesser:
+class DataPreprocessor:
     def __init__(self):
         # self.raw_data_path = 'input/arxiv-metadata-oai-snapshot.json'
         self.raw_data_path = 'input/example2.json'  # for testing
@@ -115,14 +115,6 @@ class ArxivDatasetPreprocesser:
         print('Number of cleaned abstracts: {}'.format(len(self.tokenized_abstracts)))
         print('\n')
 
-    def reassemble_corpus(self, tokenized_corpus, cleaned_corpus):
-        '''
-        Using the preprocessed tokens, reassemble the original
-        corpus.
-        '''
-        for doc in tokenized_corpus:
-            cleaned_corpus.append(' '.join(doc))
-
     def combine_output(self):
         output = []
 
@@ -150,7 +142,7 @@ class ArxivDatasetPreprocesser:
 
 def main():
     # extract
-    preprocessor = ArxivDatasetPreprocesser()
+    preprocessor = DataPreprocessor()
     preprocessor.extract_data()
     preprocessor.print_extract_step_results()
 
@@ -161,13 +153,6 @@ def main():
     print('Completed cleaning abstracts')
     preprocessor.transform_categories()
     print('Completed cleaning categories')
-
-    # preprocessor.reassemble_corpus(preprocessor.tokenized_titles, preprocessor.cleaned_titles)
-    # print('Completed reassembling titles')
-    # preprocessor.reassemble_corpus(preprocessor.tokenized_abstracts, preprocessor.cleaned_abstracts)
-    # print('Completed reassembling abstracts')
-    # preprocessor.reassemble_corpus(preprocessor.tokenized_categories, preprocessor.cleaned_categories)
-    # print('Completed reassembling categories')
 
     preprocessor.print_transform_step_results()
     output = preprocessor.combine_output()
