@@ -1,26 +1,22 @@
 import json
 import spacy
 import time
+import argparse
 
 from input.category_map import category_map
 
 
 class DataPreprocessor:
-    def __init__(self):
-        # self.raw_data_path = 'input/arxiv-metadata-oai-snapshot.json'
-        self.raw_data_path = 'input/example2.json'  # for testing
+    def __init__(self, file):
+        self.raw_data_path = file
         self.ids = []
         self.category_codes = []
         self.categories = []
         self.tokenized_categories = []
-        self.cleaned_categories = []
         self.titles = []
         self.tokenized_titles = []
-        self.cleaned_titles = []
         self.abstracts = []
         self.tokenized_abstracts = []
-        self.cleaned_abstracts = []
-        self.update_dates = []
         self.sp = spacy.load('en_core_web_sm')
 
     def supply_line(self):
@@ -35,9 +31,6 @@ class DataPreprocessor:
         for line in self.supply_line():
             self.ids.append(line['id'])
 
-            if 'cs' not in line['categories']:
-                continue
-
             category_code = self.preprocess_category_codes(line['categories'])
             self.category_codes.append(category_code)
 
@@ -48,7 +41,6 @@ class DataPreprocessor:
 
             self.titles.append(line['title'])
             self.abstracts.append(line['abstract'])
-            self.update_dates.append(line['update_date'])
 
     def print_extract_step_results(self):
         print('Number of ids extracted: {}'.format(len(self.ids)))
@@ -56,7 +48,6 @@ class DataPreprocessor:
         print('Number of categories extracted: {}'.format(len(self.categories)))
         print('Number of titles extracted: {}'.format(len(self.titles)))
         print('Number of abstracts extracted: {}'.format(len(self.abstracts)))
-        print('Number of update_dates extracted: {}'.format(len(self.update_dates)))
         print('\n')
 
     def preprocess_category_codes(self, category_code):
@@ -74,38 +65,55 @@ class DataPreprocessor:
         if category_code in category_map:
             return category_map[category_code]
 
-    def clean_doc(self, doc, keep_only_nouns=True):
+    def clean_doc(self, doc, keep_only_nouns=True, bigrams=False):
+        # TODO refactor this
         cleaned_doc = []
 
-        sp_doc = self.sp(doc, disable=["parser", "ner"])  # tokenize
-        for token in sp_doc:
-            if not token.is_stop:  # remove stop words
-                if token.is_alpha:  # remove numbers etc.
-                    token.lemma_ = token.lemma_.lower()  # lemmaize and force lowercase
-                    if keep_only_nouns:
-                        if token.pos_ == 'NOUN':
-                            cleaned_doc.append(token.lemma_)
-                    else:
-                        cleaned_doc.append(token.lemma_)
+        # TODO remove stop words, something like this:
+        #         noun_phrases = []
+        # for chunk in docx.noun_chunks:
+        #     print(chunk)
+        #     if all(token.is_stop != True and token.is_punct != True and '-PRON-' not in token.lemma_ for token in chunk) == True:
+        #         if len(chunk) > 1:
+        #             noun_phrases.append(chunk)
+        # print(noun_phrases)
+
+        if bigrams:
+            sp_doc = self.sp(doc)
+            for token in sp_doc.noun_chunks:
+                cleaned_doc.append(token.text.lower().strip())
+
+        else:
+            sp_doc = self.sp(doc, disable=["parser", "ner"])  # tokenize
+            if sp_doc is not None:
+                for token in sp_doc:
+                    if not token.is_stop:  # remove stop words
+                        if token.is_alpha:  # remove numbers etc.
+                            token.lemma_ = token.lemma_.lower()  # lemmaize and force lowercase
+
+                            if (keep_only_nouns) & (token.pos_ == 'NOUN'):  # only nouns
+                                cleaned_doc.append(token.lemma_)
+                            else:
+                                cleaned_doc.append(token.lemma_)
 
         return cleaned_doc
 
-    def transform_titles(self):
+    def transform_titles(self, bigrams):
         for title in self.titles:
-            cleaned_title = self.clean_doc(title)
+            cleaned_title = self.clean_doc(title, False, bigrams)
             self.tokenized_titles.append(cleaned_title)
 
-    def transform_abstracts(self):
+    def transform_abstracts(self, bigrams):
         # start = time.time()
         for abstract in self.abstracts:
-            cleaned_abstract = self.clean_doc(abstract)
+            cleaned_abstract = self.clean_doc(abstract, False, bigrams)
             self.tokenized_abstracts.append(cleaned_abstract)
             # end = time.time()
             # print(end - start)
 
-    def transform_categories(self):
+    def transform_categories(self, bigrams):
         for category in self.categories:
-            tokenized_category = self.clean_doc(category, keep_only_nouns=False)
+            tokenized_category = self.clean_doc(category, False, bigrams)
             self.tokenized_categories.append(tokenized_category)
 
     def print_transform_step_results(self):
@@ -119,6 +127,7 @@ class DataPreprocessor:
         output = []
 
         for abstract, title, category in zip(self.tokenized_abstracts, self.tokenized_titles, self.tokenized_categories):
+
             # start = time.time()
             doc = []
             doc.extend(abstract)
@@ -139,19 +148,46 @@ class DataPreprocessor:
         with open(filename + '.json', 'w') as f:
             json.dump(obj_to_write, f, indent=2)
 
+    def bigram(doc):
+        # Attribute: https://github.com/EricFillion/N-Grams/blob/master/ngrams.py
+
+        # create a list for the result
+        result = list()
+
+        # create a list that contains no punctuation
+        sentence = list()
+
+        # parse through the document to add all tokens that are words to the sentence list
+        for token in doc:
+            if token.is_alpha:
+                sentence.append(token)
+        # parse through the sentence while adding words in groups of two to the result
+        for word in range(len(sentence) - 1):
+            first_word = sentence[word]
+            second_word = sentence[word + 1]
+            element = [first_word.text, second_word.text]
+            result.append(element)
+
+        return result
+
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--file', help='file name, should be .json', required=True)
+    parser.add_argument('--bigrams', help='do you want to get bigrams', required=False, default=False)
+    args = parser.parse_args()
+
     # extract
-    preprocessor = DataPreprocessor()
+    preprocessor = DataPreprocessor(args.file)
     preprocessor.extract_data()
     preprocessor.print_extract_step_results()
 
     # transform
-    preprocessor.transform_titles()
+    preprocessor.transform_titles(args.bigrams)
     print('Completed cleaning titles')
-    preprocessor.transform_abstracts()
+    preprocessor.transform_abstracts(args.bigrams)
     print('Completed cleaning abstracts')
-    preprocessor.transform_categories()
+    preprocessor.transform_categories(args.bigrams)
     print('Completed cleaning categories')
 
     preprocessor.print_transform_step_results()
