@@ -65,23 +65,20 @@ class DataPreprocessor:
         if category_code in category_map:
             return category_map[category_code]
 
-    def clean_doc(self, doc, keep_only_nouns=True, bigrams=False):
+    def clean_doc(self, doc, keep_only_nouns=True, ngrams=False):
         # TODO refactor this
         cleaned_doc = []
 
-        # TODO remove stop words, something like this:
-        #         noun_phrases = []
-        # for chunk in docx.noun_chunks:
-        #     print(chunk)
-        #     if all(token.is_stop != True and token.is_punct != True and '-PRON-' not in token.lemma_ for token in chunk) == True:
-        #         if len(chunk) > 1:
-        #             noun_phrases.append(chunk)
-        # print(noun_phrases)
-
-        if bigrams:
+        if ngrams:
             sp_doc = self.sp(doc)
-            for token in sp_doc.noun_chunks:
-                cleaned_doc.append(token.text.lower().strip())
+            for chunk in sp_doc.noun_chunks:
+                cleaned_chunk = ''
+                for token in chunk:
+                    if not token.is_stop and token.is_alpha:
+                        cleaned_chunk = cleaned_chunk + str(token) + ' '
+                tmp = cleaned_chunk.strip()
+                if tmp != '':
+                    cleaned_doc.append(tmp)
 
         else:
             sp_doc = self.sp(doc, disable=["parser", "ner"])  # tokenize
@@ -98,22 +95,22 @@ class DataPreprocessor:
 
         return cleaned_doc
 
-    def transform_titles(self, bigrams):
+    def transform_titles(self, ngrams):
         for title in self.titles:
-            cleaned_title = self.clean_doc(title, False, bigrams)
+            cleaned_title = self.clean_doc(title, False, ngrams)
             self.tokenized_titles.append(cleaned_title)
 
-    def transform_abstracts(self, bigrams):
+    def transform_abstracts(self, ngrams):
         # start = time.time()
         for abstract in self.abstracts:
-            cleaned_abstract = self.clean_doc(abstract, False, bigrams)
+            cleaned_abstract = self.clean_doc(abstract, False, ngrams)
             self.tokenized_abstracts.append(cleaned_abstract)
             # end = time.time()
             # print(end - start)
 
-    def transform_categories(self, bigrams):
+    def transform_categories(self, ngrams):
         for category in self.categories:
-            tokenized_category = self.clean_doc(category, False, bigrams)
+            tokenized_category = self.clean_doc(category, False, ngrams)
             self.tokenized_categories.append(tokenized_category)
 
     def print_transform_step_results(self):
@@ -145,56 +142,35 @@ class DataPreprocessor:
         return output
 
     def write_output(self, filename, obj_to_write):
-        with open(filename + '.json', 'w') as f:
+        with open(filename, 'w') as f:
             json.dump(obj_to_write, f, indent=2)
-
-    def bigram(doc):
-        # Attribute: https://github.com/EricFillion/N-Grams/blob/master/ngrams.py
-
-        # create a list for the result
-        result = list()
-
-        # create a list that contains no punctuation
-        sentence = list()
-
-        # parse through the document to add all tokens that are words to the sentence list
-        for token in doc:
-            if token.is_alpha:
-                sentence.append(token)
-        # parse through the sentence while adding words in groups of two to the result
-        for word in range(len(sentence) - 1):
-            first_word = sentence[word]
-            second_word = sentence[word + 1]
-            element = [first_word.text, second_word.text]
-            result.append(element)
-
-        return result
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--file', help='file name, should be .json', required=True)
-    parser.add_argument('--bigrams', help='do you want to get bigrams', required=False, default=False)
+    parser.add_argument('--input_file', help='file name, should be .json', required=True)
+    parser.add_argument('--output_file', help='file name to create with output, should be .json', required=True)
+    parser.add_argument('--ngrams', help='do you want unigrams or ngrams (chunks, usually 2 or 3) in result', required=False, default=False)
     args = parser.parse_args()
 
     # extract
-    preprocessor = DataPreprocessor(args.file)
+    preprocessor = DataPreprocessor(args.input_file)
     preprocessor.extract_data()
     preprocessor.print_extract_step_results()
 
     # transform
-    preprocessor.transform_titles(args.bigrams)
+    preprocessor.transform_titles(args.ngrams)
     print('Completed cleaning titles')
-    preprocessor.transform_abstracts(args.bigrams)
+    preprocessor.transform_abstracts(args.ngrams)
     print('Completed cleaning abstracts')
-    preprocessor.transform_categories(args.bigrams)
+    preprocessor.transform_categories(args.ngrams)
     print('Completed cleaning categories')
 
     preprocessor.print_transform_step_results()
     output = preprocessor.combine_output()
 
     # load
-    preprocessor.write_output('output', output)
+    preprocessor.write_output(args.output_file, output)
 
 
 if __name__:
