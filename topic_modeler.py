@@ -139,7 +139,14 @@ class TopicModeler:
         # Change Column names
         df_dominant_topics.columns = ['Dominant_Topic', 'Topic_Keywords', 'Num_Documents', 'Perc_Documents']
 
-        return df_dominant_topics
+        df_dominant_topics.dropna(inplace=True)
+
+        topic_summary = df_dominant_topics\
+            .groupby(['Topic_Number', 'Topic_Keywords'])\
+            .agg('max')\
+            .reset_index()
+
+        return topic_summary
 
 
 # if __name__ == '__main__':
