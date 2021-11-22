@@ -97,21 +97,24 @@ class DataPreprocessor:
 
     def transform_titles(self, ngrams):
         for title in self.titles:
-            cleaned_title = self.clean_doc(title, False, ngrams)
+            if title is not None:
+                cleaned_title = self.clean_doc(title, False, ngrams)
             self.tokenized_titles.append(cleaned_title)
 
     def transform_abstracts(self, ngrams):
         # start = time.time()
         for abstract in self.abstracts:
-            cleaned_abstract = self.clean_doc(abstract, False, ngrams)
-            self.tokenized_abstracts.append(cleaned_abstract)
-            # end = time.time()
-            # print(end - start)
+            if abstract is not None:
+                cleaned_abstract = self.clean_doc(abstract, False, ngrams)
+                self.tokenized_abstracts.append(cleaned_abstract)
+                # end = time.time()
+                # print(end - start)
 
     def transform_categories(self, ngrams):
         for category in self.categories:
-            tokenized_category = self.clean_doc(category, False, ngrams)
-            self.tokenized_categories.append(tokenized_category)
+            if category is not None:
+                tokenized_category = self.clean_doc(category, False, ngrams)
+                self.tokenized_categories.append(tokenized_category)
 
     def print_transform_step_results(self):
         # TODO if not match, raise err
