@@ -42,15 +42,15 @@ Code and commentary relating to exploring candidate models and selecting a final
 
 # Repository Guide
 
-`arxiv/input/` - contains raw input file for the arxiv dataset
+`arxiv/input/` - Contains raw input file for the arXiv dataset
 
-`arxiv/preprocessed_input/`
+`arxiv/preprocessed_input/` - Contains preprocessed input for the arXiv dataset (i.e raw input run through `data_preprocessor.py`)
 
-`arxiv/data_preprocessor.py` Preprocesss the arxiv dataset. See "The arXiv dataset" for details.
+`arxiv/data_preprocessor.py` - Preprocessses the arXiv dataset. See "Preprocessing" above for details.
 
-`arxiv/topic_modeler.py` Produce a topic model on the preprocessed arXiv dataset. Also includes helper functions that encapsulate model exploration code; this is called from within `topic_modeling.ipynb`.
+`arxiv/topic_modeler.py` - Produces a topic model on the preprocessed arXiv dataset. Also includes helper functions that encapsulate model exploration code; this is called from within `topic_modeling.ipynb`.
 
-`arxiv/topic_model_search.ipynb` Exploratory analysis and model selection code.
+`arxiv/topic_model_search.ipynb` - Exploratory analysis and model selection code.
 
 # How to Run
 
