@@ -64,7 +64,7 @@ class TopicModeler:
         coherence_lda = coherence_model_lda.get_coherence()
         print('\nCoherence Score: ', coherence_lda)
 
-    def optimal_model_search(self, start=2, stop=5, step=3):
+    def optimal_model_search(self, start=2, stop=5, step=3, iterations=50):
         """
         Attribute to: https://www.machinelearningplus.com/nlp/topic-modeling-gensim-python/#4whatdoesldado
         In:
@@ -79,7 +79,7 @@ class TopicModeler:
         coherence_values = []
         model_list = []
         for num_topics in range(start, stop, step):
-            model = ldamodel.LdaModel(corpus=self.tfidf, num_topics=num_topics, id2word=self.dictionary)
+            model = ldamodel.LdaModel(corpus=self.tfidf, num_topics=num_topics, id2word=self.dictionary, iterations=iterations)
             model_list.append(model)
             coherencemodel = CoherenceModel(model=model, texts=self.texts, dictionary=self.dictionary, coherence='c_v')
             coherence_values.append(coherencemodel.get_coherence())
@@ -131,7 +131,13 @@ class TopicModeler:
         topic_contribution = round(topic_counts/topic_counts.sum(), 4)
 
         # Topic Number and Keywords
-        topic_num_keywords = sent_topics_df[['Dominant_Topic', 'Topic_Keywords']]
+        topic_num_keywords = sent_topics_df\
+            .groupby(['Dominant_Topic', 'Topic_Keywords'])\
+            .agg('count')\
+            .reset_index()\
+            .sort_values('Perc_Contribution', ascending=False)
+
+        topic_num_keywords = topic_num_keywords[['Dominant_Topic', 'Topic_Keywords']]
 
         # Concatenate Column wise
         df_dominant_topics = pd.concat([topic_num_keywords, topic_counts, topic_contribution], axis=1)
@@ -142,7 +148,7 @@ class TopicModeler:
         df_dominant_topics.dropna(inplace=True)
 
         topic_summary = df_dominant_topics\
-            .groupby(['Topic_Number', 'Topic_Keywords'])\
+            .groupby(['Dominant_Topic', 'Topic_Keywords'])\
             .agg('max')\
             .reset_index()
 

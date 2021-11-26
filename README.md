@@ -58,6 +58,8 @@ Code and commentary relating to exploring candidate models and selecting a final
 
 `arxiv/topic_model_search.ipynb` - Exploratory analysis and model selection code.
 
+`arxiv/arxiv_topic_explorer.py` - Command line application that facilitates exploring the arXiv dataset through identified topics.
+
 # How to Run
 
 TBU
@@ -68,4 +70,5 @@ TBU
 * `arxiv/data_preprocessor.py`
 * `arxiv/topic_modeler.pu`
 * `arxiv/topic_model_search.ipynb`
+* `arxiv/arxiv_topic_explorer.py`
 * Documentation for the above (all under "The arXiv dataset and models")
