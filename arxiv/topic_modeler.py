@@ -154,6 +154,26 @@ class TopicModeler:
 
         return topic_summary
 
+    def produce_doc_topic_matrix(self):
+        '''
+        out: pandas df of (doc, topic_num) where the cell is probability that doc_i is assoicated with topic_j
+        '''
+        lda_output = self.model
+
+        # # Return topic distribution for the given document bow, as a list of (topic_id, topic_probability) 2-tuples.
+        doc_topic_matrix = lda_output.get_document_topics(self.corpus, minimum_probability=None)
+        doc_topic_matrix = pd.DataFrame(doc_topic_matrix)
+
+        def extract_prob(x):
+            if x is None:
+                return 0.0
+            else:
+                return x[1]
+
+        doc_topic_matrix = doc_topic_matrix.applymap(extract_prob)
+
+        return doc_topic_matrix
+
 
 # if __name__ == '__main__':
 #     mod = TopicModeler('output.json')
