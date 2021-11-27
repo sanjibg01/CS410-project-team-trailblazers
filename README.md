@@ -62,7 +62,14 @@ Code and commentary relating to exploring candidate models and selecting a final
 
 # How to Run
 
-TBU
+To run the arXivv data set explorer:
+
+1) Clone the repository locally.
+2) Run `python arxiv/arxiv_topic_explorer.py`
+
+Requirements:
+* Python3
+* Pandas (developed with 1.3.4 but should work with older versions)
 
 # Team Member Contributions
 
