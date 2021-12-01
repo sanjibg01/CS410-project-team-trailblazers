@@ -8,7 +8,7 @@ Please see `CS_410_ Project Proposal.docx` for high-level details of the project
 
 ### Preprocessing
 
-A dataset on academic journal articles was accessed from [Kaggle](https://www.kaggle.com/Cornell-University/arxiv). The dataset is contained in a single json file. Each journal article is represented by several attributes, of which our analysis uses three: Title, Abstract, and Category.
+A dataset on academic journal articles was accessed from [Kaggle](https://www.kaggle.com/Cornell-University/arxiv). The dataset is contained in a single json file. Each journal article is represented by several attributes of which our analysis uses three: Title, Abstract, and Category.
 
 #### Initial Filtering
 
@@ -16,7 +16,7 @@ As an initial preprocessing step, we filtered the dataset to the categories "Com
 
 `grep arxiv-metadata-oai-snapshot.json -e "cs.AI" -e "cs.IR" -e "cs.LG" > input.json`
 
-This initial filtering allowed us to focus on the topics of interest, and also cut down the size of the dataset considerably which was advantegous when exploring different models. Also, we created a smaller subset of the dataset (`input_small.json`) which contains roughly 1% of the documents contained in the larger `input.json`. This smaller data set was used to test code and to run initial models very quickly.
+This initial filtering allowed us to focus on the topics of interest, and also cut down the size of the dataset considerably which was advantegous when exploring different models. Also, we created a smaller subset of the dataset (`input_small.json`) which contains roughly 1% of the documents contained in the larger `input.json`. This smaller data set was used for testing code and for running initial models very quickly.
 
 This filtered input is contained in the `arxiv/input/` directory.
 
@@ -38,13 +38,13 @@ The `--ngrams` argument determines if the preprocessing will produce unigram-onl
 * Removes stop words
 * Lowercases
 * Limits to tokens containing only alphabetic characters
-* Limits to nouns (or noun chunks, determined by the `--ngrams` option)
+* Limits to nouns (or "noun chunks", as determined by the `--ngrams` option)
 
 The output is written to `arxiv/preprocessed_input/` directory.
 
 ### Modeling
 
-Code and commentary relating to exploring candidate models and selecting a final model is contained in the Jupyter notebook file `arxiv/topic_model_search.ipynb`. Much of the code called in this notebook is contained as functions in `topic_modeling.py`.
+Code and commentary relating to exploring candidate models and selecting a final model is contained in the Jupyter notebook file `arxiv/topic_model_search.ipynb`. To make the notebook more readable, much of the code called in this notebook is contained as functions in `topic_modeling.py` which are then imported in the notebook.
 
 # Repository Guide
 
@@ -62,20 +62,20 @@ Code and commentary relating to exploring candidate models and selecting a final
 
 # How to Run
 
-To run the arXivv data set explorer:
+To run the arXiv data set explorer:
 
 1) Clone the repository locally.
 2) Run `python arxiv/arxiv_topic_explorer.py`
 
 Requirements:
 * Python3
-* Pandas (developed with 1.3.4 but should work with older versions)
+* Pandas (developed with 1.3.4 but should work with older versions as well)
 
 # Team Member Contributions
 
-@mdinauta
+@mdinauta (Matt DiNauta)
 * `arxiv/data_preprocessor.py`
-* `arxiv/topic_modeler.pu`
+* `arxiv/topic_modeler.py`
 * `arxiv/topic_model_search.ipynb`
 * `arxiv/arxiv_topic_explorer.py`
-* Documentation for the above (all under "The arXiv dataset and models")
+* Documentation for the above (i.e. all documentation under heading "The arXiv dataset and models")
