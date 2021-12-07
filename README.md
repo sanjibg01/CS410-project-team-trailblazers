@@ -6,6 +6,8 @@ Please see `CS_410_ Project Proposal.docx` for high-level details of the project
 
 ## The arXiv dataset and models
 
+For a video presentation that covers this part of the project, please see https://drive.google.com/file/d/1HwzMQZjem2aQkvqJqjUOAcZjn0SjSZv1/view?usp=sharing.
+
 ### Preprocessing
 
 A dataset on academic journal articles was accessed from [Kaggle](https://www.kaggle.com/Cornell-University/arxiv). The dataset is contained in a single json file. Each journal article is represented by several attributes of which our analysis uses three: Title, Abstract, and Category.
