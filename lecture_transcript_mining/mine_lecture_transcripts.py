@@ -41,7 +41,7 @@ def preprocess_text(doc):
 
 def get_transcripts(filenames):
     """
-    Load transcripts in json format into dictionaries, with keys as lecture titles and values as transcript text.
+    Load and combine transcripts in json format into one dictionary, with keys as lecture titles and values as transcript text.
     """
     
     all_lesson_titles = list()
@@ -60,12 +60,13 @@ def get_transcripts(filenames):
 
 def get_tokens(transcripts, lesson_titles):
     """
+    Pre-process each document into list of tokens (calling preprocess_text()).
     """
     
     lecture_tokens = {}
     lecture_token_counts = {}
     lecture_tokens_list = []
-    for title in lesson_titles: #  ['01_course-welcome-video.en.txt']
+    for title in lesson_titles: 
 
         doctxt = transcripts[title]
 
@@ -86,6 +87,10 @@ def output_tokens_tocsv(lecture_tokens, output_filename):
            writer.writerow([key, value])
 
 def create_lda_model(lecture_tokens_list, ntopics, niterations):
+    """
+    Create lda model with given parameters found through model grid search and experimentation.
+    """
+    
     np.random.seed(12345)
     dictionary = corpora.Dictionary(lecture_tokens_list)
     corpus = [dictionary.doc2bow(text) for text in lecture_tokens_list]
