@@ -7,6 +7,7 @@ import json
 from pprint import pprint
 import click
 import pkgutil
+from importlib.resources import read_text
 
 pd.set_option('max_colwidth', 75)
 pd.set_option('max_columns', 100)
@@ -23,8 +24,7 @@ class SearchEngine:
 
         # use pkgutil to use package data
         # since we are distributing as a package, it is not as straightforward as using `with open()...` from a filepath
-        rawdata = pkgutil.get_data(__package__, 'data/arxiv-small.json')
-        textdata = rawdata.decode('utf-8').split('\n')
+        textdata =  read_text('search.data', 'arxiv-small.json').split('\n')[:-1]
 
         # arxiv_data_processed is in format of {'id_title': '<abstract>', ..., 'id_title': '<abstract>'}
         arxiv_data = {}
@@ -39,8 +39,8 @@ class SearchEngine:
                 
     def load_lecture_data(self):
 
-        rawdata = pkgutil.get_data(__package__, f'data/{self.course_transcript_filename}')
-        lecture_data = json.loads(rawdata)
+        textdata = read_text('search.data', self.course_transcript_filename)
+        lecture_data = json.loads(textdata)
         for title, doc in lecture_data.items():
             lecture_data[title] = doc.replace('\n', ' ')
         return lecture_data
