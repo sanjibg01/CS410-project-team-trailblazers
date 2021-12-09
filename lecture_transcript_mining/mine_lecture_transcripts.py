@@ -40,6 +40,9 @@ def preprocess_text(doc):
 
 
 def get_transcripts(filenames):
+    """
+    Load transcripts in json format into dictionaries, with keys as lecture titles and values as transcript text.
+    """
     
     all_lesson_titles = list()
     all_transcripts = {}
@@ -56,6 +59,8 @@ def get_transcripts(filenames):
     return all_transcripts, all_lesson_titles
 
 def get_tokens(transcripts, lesson_titles):
+    """
+    """
     
     lecture_tokens = {}
     lecture_token_counts = {}
