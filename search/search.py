@@ -23,7 +23,7 @@ class SearchEngine:
 
         # use pkgutil to use package data
         # since we are distributing as a package, it is not as straightforward as using `with open()...` from a filepath
-        rawdata = pkgutil.get_data(__package__, f'data/arxiv-small.json')
+        rawdata = pkgutil.get_data(__package__, 'data/arxiv-small.json')
         textdata = rawdata.decode('utf-8').split('\n')
 
         # arxiv_data_processed is in format of {'id_title': '<abstract>', ..., 'id_title': '<abstract>'}
@@ -124,8 +124,8 @@ def query_lectures(query):
     
     Example usage: $ python -m search query-arxiv "natural language"
     """
-    search = SearchEngine(limit_arxiv_papers=10_000)
-    search.query_lectures(query)
+    se = SearchEngine(limit_arxiv_papers=10_000)
+    se.query_lectures(query)
 
 @query.command()
 @click.argument('query')
@@ -134,22 +134,22 @@ def query_arxiv(query):
 
     Example usage: $ python -m search query-arxiv "natural language"
     """
-    search = SearchEngine(limit_arxiv_papers=10_000)
-    search.query_arxiv(query)
+    se = SearchEngine(limit_arxiv_papers=10_000)
+    se.query_arxiv(query)
 
 #######################################
 
 if __name__ == "__main__":
     query()
-    # from arxiv_coursera_search import SearchEngine
+    # from search import SearchEngine
     # query = "vector space model text retrieval"
     # query = "natural language processing"
     # query = "laplace smoothing"
 
     # query = "vector space"
-    # search = SearchEngine(limit_arxiv_papers=10_000)
-    # search.query_lectures(query)
+    # se = SearchEngine()
+    # se.query_lectures(query)
     # print('\n' + '='*100)
     # print('='*100 + '\n')
-    # search.query_arxiv(query)
+    # se.query_arxiv(query)
 
