@@ -88,7 +88,10 @@ def output_tokens_tocsv(lecture_tokens, output_filename):
 
 def create_lda_model(lecture_tokens_list, ntopics, niterations):
     """
-    Create lda model with given parameters found through model grid search and experimentation.
+    Transform tokens data to BoW with Tf-IDF weighting to consider rare terms more while reducing weight on common words (important especially for verbal text).
+    Create LDA model with given parameters found through model grid search and experimentation.
+    Code adapted from: https://towardsdatascience.com/topic-modelling-in-python-with-nltk-and-gensim-4ef03213cd21
+                       https://highdemandskills.com/topic-modeling-lda/
     """
     
     np.random.seed(12345)
@@ -107,6 +110,12 @@ def create_lda_model(lecture_tokens_list, ntopics, niterations):
 
 
 def find_best_model_gridsearch(lecture_tokens_list):
+    """
+    Perform grid search through number of topics to find optimal model in terms of topic coherence values.
+    Visualize plot on parameters and their performance.
+    Get best model with highest performance.
+    
+    """
     dictionary = corpora.Dictionary(lecture_tokens_list)
     corpus = [dictionary.doc2bow(text) for text in lecture_tokens_list]
 
@@ -145,7 +154,8 @@ def find_best_model_gridsearch(lecture_tokens_list):
 
 def get_doc_summary(model, lecture_tokens_list, corpus,lesson_titles): 
     """
-    adapted from arxiv/topic_modeler.py
+    Get the most dominant topic for each doc, and their topic coverage, top keywords in dominant topic.
+    Adapted from arxiv/topic_modeler.py
     """
     sent_topics_df = pd.DataFrame()
 
@@ -171,15 +181,19 @@ def get_doc_summary(model, lecture_tokens_list, corpus,lesson_titles):
     return sent_topics_df, doc_topic_summary
 
  
-def produce_topic_summary_df(sent_topics_df): # -- adapted from arxiv/topic_modeler.py
+def produce_topic_summary_df(sent_topics_df): 
+    """
+    Produce topic distribution across documents to assess topic selection quality.
+    Adapted from arxiv/topic_modeler.py
+    """
         
-        topic_summary = sent_topics_df.groupby(['Dominant_Topic', 'Topic_Keywords']).agg('count').reset_index().sort_values('Dominant_Topic_Perc_Contribution', ascending=False)
-        topic_summary = topic_summary.iloc[: , :-3]
-        topic_summary.columns = ['Dominant_Topic', 'Topic_Keywords','Num_Documents']
-        topic_summary['Perc_Documents'] = topic_summary.Num_Documents/topic_summary.Num_Documents.sum()
-        topic_summary
+    topic_summary = sent_topics_df.groupby(['Dominant_Topic', 'Topic_Keywords']).agg('count').reset_index().sort_values('Dominant_Topic_Perc_Contribution', ascending=False)
+    topic_summary = topic_summary.iloc[: , :-3]
+    topic_summary.columns = ['Dominant_Topic', 'Topic_Keywords','Num_Documents']
+    topic_summary['Perc_Documents'] = topic_summary.Num_Documents/topic_summary.Num_Documents.sum()
+    topic_summary
 
-        return topic_summary
+    return topic_summary
  
 def main():
     
