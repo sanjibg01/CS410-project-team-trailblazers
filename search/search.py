@@ -115,9 +115,7 @@ def query():
 def query_lectures(query):
     """CLI command for querying lectures
     
-    Usage
-    -----
-    $ python search query-lectures "natural language"
+    Example usage: $ python -m search query-arxiv "natural language"
     """
     search = SearchEngine(limit_arxiv_papers=10_000)
     search.query_lectures(query)
@@ -127,9 +125,7 @@ def query_lectures(query):
 def query_arxiv(query):
     """CLI command for querying arxiv papers
 
-    Usage
-    -----
-    $ python search query-arxiv "natural language"
+    Example usage: $ python -m search query-arxiv "natural language"
     """
     search = SearchEngine(limit_arxiv_papers=10_000)
     search.query_arxiv(query)

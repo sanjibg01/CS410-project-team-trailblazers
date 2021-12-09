@@ -1,3 +1,3 @@
-from search import query
+from .search import query
 
 query()
