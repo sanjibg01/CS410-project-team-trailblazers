@@ -101,6 +101,7 @@ The LDA model from the genism library is used to mine multiple topics from the p
 `lecture_transcript_mining/transcripts_text-mining_txt.json` – Contains lecture transcripts downloaded using coursera-dl
 `lecture_transcript_mining/mine_lecture_topics.py` – Conducts text pre-processing and topic mining on lecture transcripts
 `lecture_transcript_mining/doc_topic_summary.csv` – Output topic distribution of the mine_lecture_topics.py
+`lecture_transcript_mining/topic mining exploration.ipynb` - Exploration of the topic mining process
 
 # How to Run
 
@@ -123,4 +124,5 @@ Requirements:
 
 @boryehn (Bo-Ryehn Chung)
 * `lecture_transcript_mining/mine_lecture_topics.py` (covers text preprocessing, model search, and topic mining in one script)
+* `lecture_transcript_mining/topic mining exploration.ipynb`
 * Documentation under heading "Mining topics from lecture transcripts"
