@@ -122,5 +122,5 @@ Requirements:
 * Documentation for the above (i.e. all documentation under heading "The arXiv dataset and models")
 
 @boryehn (Bo-Ryehn Chung)
-* `lecture_transcript_mining/mine_lecture_topics.py` (covers prepocessing and topic mining in one script)
+* `lecture_transcript_mining/mine_lecture_topics.py` (covers text preprocessing, model search, and topic mining in one script)
 * Documentation under heading "Mining topics from lecture transcripts"
