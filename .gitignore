@@ -7,3 +7,5 @@ venv38
 _scratch.md
 scratch.md
 __pycache__
+.DS_Store
+notebooks
