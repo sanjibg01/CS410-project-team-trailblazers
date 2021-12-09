@@ -6,6 +6,7 @@ from pathlib import Path
 import json
 from pprint import pprint
 import click
+import pkgutil
 
 pd.set_option('max_colwidth', 75)
 pd.set_option('max_columns', 100)
@@ -19,26 +20,29 @@ class SearchEngine:
         self.lecture_data = self.load_lecture_data()
             
     def load_arxiv_data(self):
+
+        # use pkgutil to use package data
+        # since we are distributing as a package, it is not as straightforward as using `with open()...` from a filepath
+        rawdata = pkgutil.get_data(__package__, f'data/arxiv-small.json')
+        textdata = rawdata.decode('utf-8').split('\n')
+
+        # arxiv_data_processed is in format of {'id_title': '<abstract>', ..., 'id_title': '<abstract>'}
         arxiv_data = {}
-        with open('./data/arxiv-small.json', 'r') as f:
-            if self.limit_arxiv_papers:
-                for _ in range(self.limit_arxiv_papers):
-                    doc = json.loads(f.readline())
-                    id_title = "{} - {}".format(doc['id'], doc['title'])
-                    arxiv_data[id_title] = doc['abstract']
-            else:
-                for _ in f:
-                    doc = json.loads(f.readline())
-                    id_title = "{} - {}".format(doc['id'], doc['title'])
-                    arxiv_data[id_title] = doc['abstract']
-        return arxiv_data
+        for line in textdata:
+            doc = json.loads(line)
+            id_title = "{} - {}".format(doc['id'], doc['title'])
+            arxiv_data[id_title] = doc['abstract']
+
+        # remove redundant data; contains metadata that may be of interest for extending this module
+        # del arxiv_data
+        print(list(arxiv_data.keys())[:5])
                 
     def load_lecture_data(self):
 
-        with open(f'./data/{self.course_transcript_filename}', 'r') as f:
-            lecture_data = json.load(f)
-            for title, doc in lecture_data.items():
-                lecture_data[title] = doc.replace('\n', ' ')
+        rawdata = pkgutil.get_data(__package__, f'data/{self.course_transcript_filename}')
+        lecture_data = json.loads(rawdata)
+        for title, doc in lecture_data.items():
+            lecture_data[title] = doc.replace('\n', ' ')
         return lecture_data
         
     def list_lectures(self):
@@ -106,6 +110,9 @@ class TfidfCosineSearch:
         
         return scores_df
 
+#######################################
+# Command Line Interface Specification
+#######################################
 @click.group()
 def query():
     pass
@@ -129,6 +136,8 @@ def query_arxiv(query):
     """
     search = SearchEngine(limit_arxiv_papers=10_000)
     search.query_arxiv(query)
+
+#######################################
 
 if __name__ == "__main__":
     query()

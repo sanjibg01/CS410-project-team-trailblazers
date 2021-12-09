@@ -7,4 +7,6 @@ setuptools.setup(
     description="TF-IDF search for Coursera and Arxiv papers",
     packages=setuptools.find_packages(),
     install_requires=["click", "pandas", "tabulate", "scikit-learn"],
+    include_package_data=True,
+    package_data={"search": ["data/*"]},
 )
