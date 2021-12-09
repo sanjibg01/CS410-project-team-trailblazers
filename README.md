@@ -73,6 +73,45 @@ Requirements:
 * Python3
 * Pandas (developed with 1.3.4 but should work with older versions as well)
 
+
+## Mining topics from lecture transcripts
+
+For a video presentation that covers this part of the project, please see ____.
+Detailed documentation is in the form of comments in this python file mine_lecture_topics.py. It can run standalone, requiring as inputs the transcripts in json format. 
+
+
+### Data Source
+Transcript data from the CS410 course (comprising of two MOOCs: Text Retrieval; Text Mining and Analytics) are obtained using the python package coursera-dl. We use this course as an example to show enhanced intelligent learning. However, the topic mining is general enough that can be applied to any course lecture transcripts. 100 documents of lecture video transcripts were available and collected. 
+
+### Text Pre-processing
+The library metapy is used to create a token stream that applies these text pre-processing steps to the lecture transcripts:
+1.	Lower case
+2.	Character length filter 
+3.	Lemmatize 
+4.	Filter out common stop words or words in transcript data that are not necessary i.e. [MUSIC], [INAUDIBLE], [SOUND]
+5.	Tokenize into unigrams
+These pre-processing steps are used as they produced the most robust word units to mine the text data (since the transcripts are verbal, not written language, applying n-grams produced many word combinations that would not produce as much significant meaning as from written documents i.e. research papers).
+
+### Topic Mining
+The LDA model from the genism library is used to mine multiple topics in the processed text data. A grid search through a range of hyperparameters is conducted to find the most optimal model that produces high topic coherence and topic distribution across all 100 documents. Since the number of documents (100) is small, the LDA tends to be unstable producing topics with low average topic coherence (range 0.3-0.5) with imbalanced number of documents within each topic. To address this in future work, we would explore supplementing transcript data from other text mining courses to mine for more robust topics. We explore whether the topics found can help retrieve similar documents to a search query. With the most optimal LDA model found, an output dataframe is generated containing the dominant topic for each document, topic coverage, and most salient keywords of the dominant topic. These features are used in the text retrieval process to help retrieve lectures relevant to the query and similar to other lectures in the same topic. 
+
+# Repository Guide
+
+`lecture_transcript_mining/transcripts_text-retrieval_txt.json` – Contains lecture transcripts downloaded using coursera-dl
+`lecture_transcript_mining/transcripts_text-mining_txt.json` – Contains lecture transcripts downloaded using coursera-dl
+`lecture_transcript_mining/mine_lecture_topics.py` – Conducts text pre-processing and topic mining on lecture transcripts
+`lecture_transcript_mining/doc_topic_summary.csv` – Output topic distribution of the mine_lecture_topics.py
+
+# How to Run
+
+To run the lecture topic mining:
+
+1) Clone the repository locally.
+2) Run `python lecture_transcript_mining/mine_lecture_topics.py`
+
+Requirements:
+* Python3
+
 # Team Member Contributions
 
 @mdinauta (Matt DiNauta)
@@ -81,3 +120,7 @@ Requirements:
 * `arxiv/topic_model_search.ipynb`
 * `arxiv/arxiv_topic_explorer.py`
 * Documentation for the above (i.e. all documentation under heading "The arXiv dataset and models")
+
+@boryehn (Bo-Ryehn Chung)
+* `lecture_transcript_mining/mine_lecture_topics.py` (covers prepocessing and topic mining in one script)
+* Documentation under heading "Mining topics from lecture transcripts"
