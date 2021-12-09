@@ -1,0 +1,9 @@
+.ipynb_checkpoints
+venv*
+venv35
+venv38
+.docx
+.vscode
+_scratch.md
+scratch.md
+__pycache__
