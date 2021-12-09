@@ -32,10 +32,8 @@ class SearchEngine:
             doc = json.loads(line)
             id_title = "{} - {}".format(doc['id'], doc['title'])
             arxiv_data[id_title] = doc['abstract']
-
-        # remove redundant data; contains metadata that may be of interest for extending this module
-        # del arxiv_data
-        print(list(arxiv_data.keys())[:5])
+            
+        return arxiv_data
                 
     def load_lecture_data(self):
 
