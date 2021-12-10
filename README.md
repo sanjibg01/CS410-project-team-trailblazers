@@ -1,7 +1,7 @@
 # UIUC CS 410 - Team Trailblazers Course Project
+Write-up/documentation on the final project.
 
 # About
-
 Please see `CS_410_ Project Proposal.docx` for high-level details of the project (this was a plan written at the outset of the project, so that the final result differ in some ways based on learnings along the way).
 
 ## The arXiv dataset and models
