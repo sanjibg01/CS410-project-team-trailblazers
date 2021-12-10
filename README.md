@@ -64,6 +64,7 @@ The library metapy is used to create a token stream that applies these text pre-
 3.	Lemmatize 
 4.	Filter out common stop words or words in transcript data that are not necessary i.e. [MUSIC], [INAUDIBLE], [SOUND]
 5.	Tokenize into unigrams
+6.	
 These pre-processing steps are used as they produced the most robust word units to mine the text data (since the transcripts are verbal, not written language, applying n-grams produced many word combinations that would not produce as much significant meaning as from written documents i.e. research papers).
 
 ### Topic Mining
