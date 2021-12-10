@@ -262,7 +262,9 @@ PAPERS SEARCHED: 10000
 |          8305 | 0705.4303 - Database Manipulation on Quantum Computers                               | 0.155392 | Manipulating a database system on a quantum comp |
 ```
 
-Example usage from Python. <br>This is equivalent to the CLI command: `$ python -m search query-arxiv "natural language"`
+Example usage from Python.
+* This is equivalent to the CLI command: `$ python -m search query-arxiv "natural language"`
+* A requirment for importing from the `search` module is to follow the `pip install` steps above for Search CLI
 ```python
 from search import SearchEngine
 

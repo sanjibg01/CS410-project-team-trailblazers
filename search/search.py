@@ -2,6 +2,8 @@
 
 Description: The `search` module implements search using TF-IDF and cosine similarity. We can search Coursera lecture transcripts and/or Arxiv research papers. 
 
+See README.md for detailed examples.
+
 Usage: python -m search [OPTIONS] COMMAND [ARGS]...
 
 Options:
@@ -12,22 +14,28 @@ Commands:
   query-lectures  CLI command for querying lectures
 
 """
+import json
+import pkgutil
+from importlib.resources import read_text
+from pathlib import Path
+from pprint import pprint
+from typing import Dict, List
+
+import click
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from typing import List
-from pathlib import Path
-import json
-from pprint import pprint
-import click
-import pkgutil
-from importlib.resources import read_text
 
 pd.set_option("max_colwidth", 75)
 pd.set_option("max_columns", 100)
 
 
 class SearchEngine:
+    """Implements query-document matching via TF-IDF weights and cosine similarity.
+
+    Includes methods for loading Arxiv paper data (sample), loading Coursera lecture transcripts, and performing the queries.
+    """
+
     def __init__(
         self,
         course_transcript_filename="transcripts_text-retrieval_txt.json",
@@ -38,7 +46,8 @@ class SearchEngine:
         self.arxiv_data = self.load_arxiv_data()
         self.lecture_data = self.load_lecture_data()
 
-    def load_arxiv_data(self):
+    def load_arxiv_data(self) -> Dict:
+        """Loads Arxiv research paper documents from ./search/data/arxiv-small.json"""
 
         # use pkgutil to use package data
         # since we are distributing as a package, it is not as straightforward as using `with open()...` from a filepath
@@ -54,6 +63,11 @@ class SearchEngine:
         return arxiv_data
 
     def load_lecture_data(self):
+        """Loads Coursera lecture data.
+
+        An alternative course title file can be provided to extend this.
+        For now, our two course options are 'transcripts_text-retrieval_txt.json' or 'transcripts_text-mining_txt.json' (retrieval and mining).
+        """
 
         textdata = read_text("search.data", self.course_transcript_filename)
         lecture_data = json.loads(textdata)
@@ -62,20 +76,27 @@ class SearchEngine:
         return lecture_data
 
     def list_lectures(self):
+        """Displays all lecture titles.
+
+        This is a helper to guide a user in search terms they may use in a query.
+        """
+
         print("ID\tLecture Title")
         for idx, lecture_title in enumerate(sorted(self.lecture_data.keys())):
             print(f"{idx}\t{lecture_title}")
 
-    def query_lectures(self, query):
+    def query_lectures(self, query, n_docs=10):
+        """Prints top N list of lectures that match a query in best-to-worst order."""
+
         documents: List[str] = list(self.lecture_data.values())
         tfidf_search = TfidfCosineSearch(query, documents)
-        scored_docs = tfidf_search.score_documents()
+        scored_docs = tfidf_search.make_document_scores_df()
         scored_docs["title"] = scored_docs["document_id"].map(
             dict(enumerate(self.lecture_data.keys()))
         )
         scored_docs = scored_docs[["document_id", "title", "score", "document"]]
         scored_docs["document_preview"] = scored_docs["document"].str.slice(0, 50)
-        top_n_docs = 10
+        top_n_docs = n_docs
         print(f"QUERY: '{query}'")
         print(f"TOP {top_n_docs} MATCHES IN LECTURE TRANSCRIPTS")
         print(
@@ -84,19 +105,23 @@ class SearchEngine:
             .to_markdown(index=False)
         )
 
-    def query_arxiv(self, query):
+    def query_arxiv(self, query, n_docs=10):
+        """Prints top N list of Arxiv papers that match a query in best-to-worst order."""
+
         documents: List[str] = list(self.arxiv_data.values())
         tfidf_search = TfidfCosineSearch(query, documents)
-        scored_docs = tfidf_search.score_documents()
+        scored_docs = tfidf_search.make_document_scores_df()
         scored_docs["title"] = scored_docs["document_id"].map(
             dict(enumerate(self.arxiv_data.keys()))
         )
         scored_docs = scored_docs[["document_id", "title", "score", "document"]]
         scored_docs["document_preview"] = scored_docs["document"].str.slice(0, 50)
-        top_n_docs = 10
+        top_n_docs = n_docs
         print(f"QUERY: '{query}'")
         print(f"TOP {top_n_docs} MATCHES IN ARXIV ABSTRACTS")
-        print(f"# PAPERS SEARCHED: {self.limit_arxiv_papers}")
+        print(
+            f"NUMBER OF PAPERS SEARCHED: 10,000"
+        )  # FIXME: hard-coded to 10,000. This should be changed if we extend the model to a larger data source.
         print(
             scored_docs.loc[:, ["document_id", "title", "score", "document_preview"]]
             .head(top_n_docs)
@@ -105,12 +130,18 @@ class SearchEngine:
 
 
 class TfidfCosineSearch:
+    """Implements query-document matching given a query and document.
+
+    This class is generalized to be agnostic of the data domain.
+    """
+
     def __init__(self, query, documents):
         self.query = query
         self.documents = documents
-        self.scores_df = self.score_documents()
+        self.scores_df = self.make_document_scores_df()
 
-    def make_tfidf_weights_df(self):
+    def make_tfidf_weights_df(self) -> pd.DataFrame:
+        """Produces formatted dataframe of TF-IDF weights for query and documents."""
         query_and_docs = [self.query] + self.documents
         vectorizer = TfidfVectorizer()
         transformed = vectorizer.fit_transform(query_and_docs)
@@ -122,7 +153,14 @@ class TfidfCosineSearch:
 
         return tfidf_as_df.replace(0, "")
 
-    def score_documents(self):
+    def make_document_scores_df(self):
+        """Dataframe with document scores (scoring relevance to query).
+
+        This dataframe can be used for analysis.
+        From a CLI-user's POV, the dataframe is later displayed as terminal output limiting top N documents and showing document preview only.
+        This returned dataframe is useful for inspecting the full document without cross-refencing to source data.
+        """
+
         query_and_docs = [self.query] + self.documents
         vectorizer = TfidfVectorizer()
         transformed = vectorizer.fit_transform(query_and_docs)
@@ -151,6 +189,7 @@ class TfidfCosineSearch:
 def query():
     pass
 
+
 @query.command()
 @click.argument("query")
 def query_lectures(query):
@@ -161,6 +200,7 @@ def query_lectures(query):
     se = SearchEngine()
     se.query_lectures(query)
 
+
 @query.command()
 @click.argument("query")
 def query_arxiv(query):
@@ -168,8 +208,10 @@ def query_arxiv(query):
 
     Example usage: $ python -m search query-arxiv "natural language"
     """
+
     se = SearchEngine()
     se.query_arxiv(query)
+
 
 @query.command()
 def list_lectures():
@@ -177,8 +219,11 @@ def list_lectures():
 
     Example usage: $ python -m search list-lectures
     """
+
     se = SearchEngine()
     se.list_lectures()
 
+
 if __name__ == "__main__":
+    # initializes CLI
     query()
