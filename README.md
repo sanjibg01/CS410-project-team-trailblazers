@@ -60,7 +60,8 @@ Code and commentary relating to exploring candidate models and selecting a final
 
 ## Mining topics from lecture transcripts
 
-For a video presentation that covers this part of the project, please see ____.
+For a video presentation that covers this part of the project, please see: https://user-images.githubusercontent.com/88016352/145514407-205f52c6-6e93-4561-9861-7566977b5c4a.mp4
+
 Detailed documentation is in the form of comments in this python file mine_lecture_topics.py. It can run standalone, requiring as inputs the transcripts in json format. 
 
 ### Data Source
