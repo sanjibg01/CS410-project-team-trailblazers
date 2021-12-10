@@ -1,6 +1,15 @@
 # UIUC CS 410 - Team Trailblazers Course Project
 Write-up/documentation on the final project, with links to presentation within each main section.
 
+# Contents
+* [About](#about)
+* [The arXiv dataset and models](#the-arxiv-dataset-and-models)
+* [Mining topics from lecture transcripts](#mining-topics-from-lecture-transcripts)
+* [TF-IDF and Cosine Similarity Search for Querying Lectures and Arxiv Papers](#tf-idf-and-cosine-similarity-search-for-querying-lectures-and-arxiv-papers)
+* [Repository Guide](#repository-guide)
+* [How to Run](#how-to-run)
+* [Team Member Contributions](#team-member-contributions)
+
 # About
 Please see [`./docs/proposal.md`](/docs/proposal.md) for high-level details of the project. This was a plan written at the outset of the project, so that the final result differ in some ways based on learnings along the way.
 
