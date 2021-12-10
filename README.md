@@ -223,7 +223,7 @@ TOP 10 MATCHES IN LECTURE TRANSCRIPTS
 
 Query Arxiv papers and display relevant matches.
 ```bash
-(venv) $ python -m search query-lectures "vector space model"
+(venv) $ python -m search query-arxiv "vector space model"
 QUERY: 'vector space model'
 TOP 10 MATCHES IN ARXIV ABSTRACTS
 PAPERS SEARCHED: 10000
