@@ -48,31 +48,6 @@ The output is written to `arxiv/preprocessed_input/` directory.
 
 Code and commentary relating to exploring candidate models and selecting a final model is contained in the Jupyter notebook file `arxiv/topic_model_search.ipynb`. To make the notebook more readable, much of the code called in this notebook is contained as functions in `topic_modeling.py` which are then imported in the notebook.
 
-# Repository Guide
-
-`arxiv/input/` - Contains raw input file for the arXiv dataset
-
-`arxiv/preprocessed_input/` - Contains preprocessed input for the arXiv dataset
-
-`arxiv/data_preprocessor.py` - Preprocessses the arXiv dataset. See "Preprocessing the Corpus" above for details.
-
-`arxiv/topic_modeler.py` - Produces a topic model on the preprocessed arXiv dataset. Also includes helper functions that encapsulate model exploration code; this is called from within `topic_modeling.ipynb`.
-
-`arxiv/topic_model_search.ipynb` - Exploratory analysis and model selection code.
-
-`arxiv/arxiv_topic_explorer.py` - Command line application that facilitates exploring the arXiv dataset through identified topics.
-
-# How to Run
-
-To run the arXiv data set explorer:
-
-1) Clone the repository locally.
-2) Run `python arxiv/arxiv_topic_explorer.py`
-
-Requirements:
-* Python3
-* Pandas (developed with 1.3.4 but should work with older versions as well)
-
 
 ## Mining topics from lecture transcripts
 
@@ -97,13 +72,42 @@ The LDA model from the genism library is used to mine multiple topics from the p
 
 # Repository Guide
 
+## arXiv topic modeling
+
+`arxiv/input/` - Contains raw input file for the arXiv dataset
+
+`arxiv/preprocessed_input/` - Contains preprocessed input for the arXiv dataset
+
+`arxiv/data_preprocessor.py` - Preprocessses the arXiv dataset. See "Preprocessing the Corpus" above for details.
+
+`arxiv/topic_modeler.py` - Produces a topic model on the preprocessed arXiv dataset. Also includes helper functions that encapsulate model exploration code; this is called from within `topic_modeling.ipynb`.
+
+`arxiv/topic_model_search.ipynb` - Exploratory analysis and model selection code.
+
+`arxiv/arxiv_topic_explorer.py` - Command line application that facilitates exploring the arXiv dataset through identified topics.
+
+## Lecture transcript topic modeling
+
 `lecture_transcript_mining/transcripts_text-retrieval_txt.json` – Contains lecture transcripts downloaded using coursera-dl
+
 `lecture_transcript_mining/transcripts_text-mining_txt.json` – Contains lecture transcripts downloaded using coursera-dl
+
 `lecture_transcript_mining/mine_lecture_topics.py` – Conducts text pre-processing and topic mining on lecture transcripts
+
 `lecture_transcript_mining/doc_topic_summary.csv` – Output topic distribution of the mine_lecture_topics.py
+
 `lecture_transcript_mining/topic mining exploration.ipynb` - Exploration of the topic mining process
 
 # How to Run
+
+To run the arXiv data set explorer:
+
+1) Clone the repository locally.
+2) Run `python arxiv/arxiv_topic_explorer.py`
+
+Requirements:
+* Python3
+* Pandas (developed with 1.3.4 but should work with older versions as well)
 
 To run the lecture topic mining:
 
@@ -112,6 +116,7 @@ To run the lecture topic mining:
 
 Requirements:
 * Python3
+
 
 # Team Member Contributions
 
