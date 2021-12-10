@@ -163,9 +163,9 @@ $ source ./venv/Scripts/activate # Windows
 
 Example Usage with CLI App
 
-Show help
+Show help for the CLI app
 ```bash
-# ready to go! show help for the CLI app
+# ready to go!
 (venv) $ python -m search --help
 Usage: python -m search [OPTIONS] COMMAND [ARGS]...
 
@@ -176,8 +176,10 @@ Commands:
   list-lectures   CLI command for displaying all lectures.
   query-arxiv     CLI command for querying arxiv papers
   query-lectures  CLI command for querying lectures
+```
 
-# show help for one command
+Show help for one command
+```bash
 (venv) $ python -m search query-arxiv --help
 Usage: python -m search query-arxiv [OPTIONS] QUERY
 
@@ -190,7 +192,6 @@ Options:
 ```
 
 List lectures. We use the 'text-retrieval' course by default, though we can also switch to 'text-mining'. 
-
 ```bash
 (venv) $ python -m search list-lectures
 ID	Lecture Title
@@ -201,7 +202,7 @@ ID	Lecture Title
 44	10_lesson-6-10-course-summary.en.txt
 ```
 
-Query lectures or Arxiv papers and return top matches.
+Query lectures and display relevant matches.
 ```bash
 (venv) $ python -m search query-lectures "vector space model"
 QUERY: 'vector space model'
@@ -220,6 +221,7 @@ TOP 10 MATCHES IN LECTURE TRANSCRIPTS
 |            22 | 03_lesson-4-3-query-likelihood-retrieval-function.en.txt                 | 0.0890911 | [SOUND] This lecture is about query likelihood, pr |
 ```
 
+Query Arxiv papers and display relevant matches.
 ```bash
 (venv) $ python -m search query-lectures "vector space model"
 QUERY: 'vector space model'
