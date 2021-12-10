@@ -1,1 +1,1 @@
-from .search import SearchEngine
+from .search import SearchEngine, TfidfCosineSearch
