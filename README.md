@@ -82,6 +82,9 @@ The LDA model from the gensim library is used to mine multiple topics from the p
 
 ## TF-IDF and Cosine Similarity Search for Querying Lectures and Arxiv Papers
 ### Description of `search/search.py`
+
+For a video presentation that covers this part of the project, please see: https://drive.google.com/file/d/12dZIfoVCsqCWyCB0iW3jyN5UkL4bwEnB/view?usp=sharing
+
 * Structure
     * `SearchEngine` class with methods for loading Arxiv papers, Coursera lectures, and running queries
     * `TfidfCosineSearch` class that scores documents against a query. 
