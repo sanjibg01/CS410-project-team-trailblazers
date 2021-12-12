@@ -1,5 +1,5 @@
 # importing `search` should work after pip installing from repo
-    # python -m pip install git+https://github.com/sanjibg01/CS410-project-team-trailblazers.git
+  # python pip install git+https://github.com/sanjibg01/CS410-project-team-trailblazers.git
 
 from typing import List
 import pandas as pd
