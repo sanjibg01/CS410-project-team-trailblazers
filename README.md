@@ -314,4 +314,6 @@ se.query_lectures(query)
 * Documentation under heading "Search Command Line Interface" and associated CLI usage instructions
 
 @sanjibg2 (Sanjib Ghosh)
+* Evaluation of the recommendation model using Mean Average Precision 'ap_evaluation.ipnyb'
+   * Documentation inline
 
